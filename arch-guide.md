@@ -11,6 +11,7 @@
   device list
   station wlan0 scan
   station wlan0 get-networks
+  station wlan0 connect #wifi-name
   #enter password for chosen wifi
   exit
   ```
@@ -127,8 +128,7 @@ cfdisk
   ```bash
   su kush
   sudo pacman -Syu
-  sudo pacman -S plasma sddm
-  sudo pacman -S firefox konsole dolphin kate
+  sudo pacman -S plasma sddm firefox konsole dolphin kate
   exit
   ```
 
@@ -137,7 +137,7 @@ cfdisk
   ```bash
   systemctl enable NetworkManager.service
   systemctl enable dhcpcd@eno2.service
-  sudo systemctl enable sddm
+  sudo systemctl enable sddm.service
   ```
 
 - #### setting up grub
