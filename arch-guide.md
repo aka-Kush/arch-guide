@@ -136,7 +136,7 @@ cfdisk
 
   ```bash
   systemctl enable NetworkManager.service
-  systemctl enable dhcpcd@eno2.service
+  systemctl enable dhcpcd@eno2.service (note: in case of slow boot, disable this service)
   sudo systemctl enable sddm.service
   ```
 
