@@ -94,7 +94,9 @@ cfdisk
   #uncomment en_US.UTF-8
   locale-gen
   nano /etc/locale.conf
+  #add following lines:
   LANG=en_US.UTF-8
+  LC_CTYPE=en_US.UTF-8
   #save and exit
   ```
 
