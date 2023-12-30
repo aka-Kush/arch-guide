@@ -4,6 +4,13 @@
 
 ---
 
+- ### increasing font size
+
+  ```bash
+  setfont iso01-12x22.psfu.gz
+  ```
+
+
 - #### connecting to wifi
 
   ```bash
