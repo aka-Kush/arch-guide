@@ -1,91 +1,92 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-# Start
+echo "Please enter EFI paritition:"
+read EFI
 
-# 1. Format disk
-echo "Formatting disk partitions..."
-mkfs.ext4 /dev/nvme0n1p3  
-mkfs.fat -F 32 /dev/nvme0n1p1
-mkswap /dev/nvme0n1p2
+echo "Please enter Root(/) paritition:"
+read ROOT  
 
-# 2. Mounting disk 
-echo "Mounting disk partitions..."
-mount /dev/nvme0n1p3 /mnt  
+echo "Please enter SWAP paritition:"
+read SWAP
+
+echo "Please enter your Username"
+read USER 
+
+echo "Please enter your Full Name"
+read NAME 
+
+echo "Please enter your Password"
+read PASSWORD 
+
+# make filesystems
+echo -e "\nCreating Filesystems...\n"
+
+mkfs.ext4 "${ROOT}"
+mkfs.fat -F 32 "${EFI}"
+mkswap "${SWAP}"
+
+# mount target
+mount "${ROOT}" /mnt
 mkdir -p /mnt/boot/efi
-mount /dev/nvme0n1p1 /mnt/boot/efi  
-swapon /dev/nvme0n1p2  
+mount "${EFI}" /mnt/boot/efi
+swapon "${SWAP}"
 
-# 3. Install base system
-echo "Installing base system..."
-pacstrap /mnt base linux linux-firmware sof-firmware base-devel nano networkmanager grub efibootmgr linux-headers
+echo "--------------------------------------"
+echo "-- INSTALLING Base Arch Linux --"
+echo "--------------------------------------"
+pacstrap /mnt base linux base-devel linux-firmware sof-firmware linux-headers networkmanager nano amd-ucode --noconfirm --needed
 
-# 4. Generating fstab
-echo "Generating fstab..."
-genfstab -U /mnt >> /mnt/etc/fstab  
+# fstab
+genfstab /mnt > /mnt/etc/fstab
 
-# 5. Set up the chroot environment and run commands inside
-arch-chroot /mnt <<EOF
-# 6. Setting timezone and syncing clock
-echo "Setting timezone and syncing clock..."
+cat <<REALEND > /mnt/next.sh
+useradd -m $USER
+usermod -c "${NAME}" $USER
+usermod -aG wheel,storage,power,audio,video $USER
+echo $USER:$PASSWORD | chpasswd
+sed -i 's/^# %wheel ALL=(ALL:ALL) ALL/%wheel ALL=(ALL:ALL) ALL/' /etc/sudoers
+
+echo "-------------------------------------------------"
+echo "Setup Language to US and set locale"
+echo "-------------------------------------------------"
+sed -i 's/^#en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen
+locale-gen
+echo "LANG=en_US.UTF-8" >> /etc/locale.conf
+
 ln -sf /usr/share/zoneinfo/Asia/Kolkata /etc/localtime
 hwclock --systohc
 
-# 7. Setting and updating correct locale
-echo "Setting and updating correct locale..."
-echo "en_US.UTF-8 UTF-8" > /etc/locale.gen
-locale-gen
-echo LANG=en_US.UTF-8 > /etc/locale.conf
-echo LC_CTYPE=en_US.UTF-8 >> /etc/locale.conf
-
-# 8. Setting hostname
-echo "Setting hostname..."
 echo "arch" > /etc/hostname
 
-# 9. Root password 
-echo "Setting up root password..."
-echo "Enter root password..."
-passwd
+echo "--------------------------------------"
+echo "-- Bootloader Installation  --"
+echo "--------------------------------------"
 
-# 10. Creating user with sudo privileges  
-echo "Creating user with sudo privileges..."
-echo "Enter user name:"
-read username
-useradd -m -G wheel -s /bin/bash "$username"
-
-# 11. Uncommenting %wheel line in sudoers
-echo "Uncommenting %wheel line in sudoers..."
-sed -i '/^# %wheel ALL=(ALL) ALL/s/^# //' /etc/sudoers
-
-# 12. Set password for the user
-echo "Enter user password..."
-passwd "$username"
-echo "$username ALL=(ALL) ALL" > /etc/sudoers.d/50_$username
-
-# 13. Installing user system and packages
-echo "Installing user system..."
-pacman -Syyu
-pacman -S networkmanager nvidia nvidia-utils nvidia-settings xorg xorg-server vim git curl wget xdg-user-dirs xdg-user-dirs-gtk plasma sddm firefox alacritty
-
-# 14. Enabling services
-echo "Enabling services..."
-systemctl enable sddm
-systemctl enable NetworkManager
-grub-install /dev/nvme0n1  
+pacman -S grub ntfs-3g os-prober fuse efibootmgr --noconfirm --needed
+grub-install /dev/nvme0n1
 grub-mkconfig -o /boot/grub/grub.cfg
 
-EOF
+echo "-------------------------------------------------"
+echo "Video and Audio Drivers"
+echo "-------------------------------------------------"
 
-# 15. Final message and reboot
-echo "System installed!!!"
-echo "Rebooting..."
+pacman -S xorg xorg-server mesa-utils nvidia nvidia-utils nvidia-settings opencl-nvidia pipewire pipewire-alsa pipewire-pulse --noconfirm --needed
 
-# Disable swap before unmounting (optional but cleaner)
-swapoff -a  
+systemctl enable NetworkManager
+systemctl --user enable pipewire pipewire-pulse
 
-# Unmount partitions
-umount -R /mnt
 
-# Reboot the system
-reboot
+echo "-------------------------------------------------"
+echo "Desktop Environment"
+echo "-------------------------------------------------"
+pacman -S gnome gnome-shell gdm alacritty firefox --noconfirm --needed
 
-# EOF
+systemctl enable gdm 
+
+echo "-------------------------------------------------"
+echo "Install Complete, You can reboot now"
+echo "-------------------------------------------------"
+
+REALEND
+
+arch-chroot /mnt sh next.sh
