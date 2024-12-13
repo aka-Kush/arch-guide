@@ -34,6 +34,7 @@ swapon "${SWAP}"
 echo "--------------------------------------"
 echo "-- INSTALLING Base Arch Linux --"
 echo "--------------------------------------"
+sed -i 's/^#ParallelDownloads = 5/ParallelDownloads = 5/' /etc/pacman.conf
 pacstrap /mnt base linux base-devel linux-firmware sof-firmware linux-headers networkmanager nano amd-ucode --noconfirm --needed
 
 # fstab
@@ -62,6 +63,7 @@ echo "--------------------------------------"
 echo "-- Bootloader Installation  --"
 echo "--------------------------------------"
 
+sed -i 's/^#ParallelDownloads = 5/ParallelDownloads = 5/' /etc/pacman.conf
 pacman -S grub ntfs-3g os-prober fuse efibootmgr --noconfirm --needed
 grub-install /dev/nvme0n1
 grub-mkconfig -o /boot/grub/grub.cfg
