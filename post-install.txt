@@ -1,0 +1,22 @@
+sudo pacman -Syyu
+sudo pacman -S git vim
+
+git clone https://aur.archlinux.org/paru.git
+makepkg -si
+
+enable multilib (/etc/pacman.conf)
+
+paru -S steam discord brave-bin kitty dolphin spotify code audiotube lutris lsd fish neofetch ttf-jetbrains-mono-nerd ttf-firacode-nerd ttf-meslo-nerd qemu-full qemu-img libvirt virt-install virt-manager virt-viewer edk2-ovmf dnsmasq swtpm guestfs-tools libosinfo tuned bluez bluez-utils blueman xdg-user-dirs xdg-user-dirs-gtk xdg-desktop-portal qbittorrent plank
+
+for kde
+paru -S kate dolphin okular konsole ark gwenview filelight kcalc yakuake kamoso elisa vlc
+
+
+sudo systemctl enable libvirtd.service
+sudo systemctl enable bluetooth.service
+
+
+chsh -s /bin/fish kush
+alias ls="lsd -l"
+alias lsa="lsd -al"
+change kitten theme and add jetbrains font to config
